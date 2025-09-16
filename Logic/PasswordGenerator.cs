@@ -31,6 +31,28 @@ public static class PasswordGenerator
     }
 
     /// <summary>
+    /// Generates multiple passwords by concatenating random words in camelCase format.
+    /// </summary>
+    /// <param name="count">The number of passwords to generate. Must be between 1 and 100.</param>
+    /// <param name="minLength">The minimum length of each generated password. Must be between 6 and 1000.</param>
+    /// <param name="replaceSpecialCharacters">If true, replaces certain characters with special symbols.</param>
+    /// <returns>A list of password strings meeting the specified criteria.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when count is less than 1, greater than 100, or when minLength is out of range.</exception>
+    public static List<string> GeneratePasswords(int count, int minLength, bool replaceSpecialCharacters)
+    {
+        ValidatePasswordCount(count);
+        ValidateMinLength(minLength);
+        
+        var passwords = new List<string>(count);
+        for (int i = 0; i < count; i++)
+        {
+            passwords.Add(GeneratePassword(minLength, replaceSpecialCharacters));
+        }
+        
+        return passwords;
+    }
+
+    /// <summary>
     /// Validates that the minimum length parameter is within acceptable bounds.
     /// </summary>
     /// <param name="minLength">The minimum length to validate.</param>
@@ -39,6 +61,17 @@ public static class PasswordGenerator
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(minLength, 5, nameof(minLength));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(minLength, 1000, nameof(minLength));
+    }
+
+    /// <summary>
+    /// Validates that the password count parameter is within acceptable bounds.
+    /// </summary>
+    /// <param name="count">The password count to validate.</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when count is out of range.</exception>
+    internal static void ValidatePasswordCount(int count)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(count, 1, nameof(count));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(count, 100, nameof(count));
     }
 
     /// <summary>

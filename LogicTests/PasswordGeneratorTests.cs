@@ -232,4 +232,164 @@ public class PasswordGeneratorTests
         // Check that there are some uppercase letters (indicating word boundaries in camelCase)
         Assert.True(password.Any(char.IsUpper), "Password should contain some uppercase letters");
     }
+
+    #region ValidatePasswordCount Tests
+    
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(-10)]
+    public void ValidatePasswordCount_ThrowsArgumentOutOfRangeException_WhenCountIsLessThanOne(int count)
+    {
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => 
+            PasswordGenerator.ValidatePasswordCount(count));
+        
+        Assert.Equal(nameof(count), exception.ParamName);
+        Assert.Contains("must be greater than or equal to", exception.Message);
+    }
+
+    [Theory]
+    [InlineData(101)]
+    [InlineData(200)]
+    [InlineData(int.MaxValue)]
+    public void ValidatePasswordCount_ThrowsArgumentOutOfRangeException_WhenCountIsGreaterThanHundred(int count)
+    {
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => 
+            PasswordGenerator.ValidatePasswordCount(count));
+        
+        Assert.Equal(nameof(count), exception.ParamName);
+        Assert.Contains("must be less than or equal to", exception.Message);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(5)]
+    [InlineData(50)]
+    [InlineData(100)]
+    public void ValidatePasswordCount_DoesNotThrow_WhenCountIsValid(int count)
+    {
+        // Act & Assert (should not throw)
+        PasswordGenerator.ValidatePasswordCount(count);
+    }
+
+    #endregion
+
+    #region GeneratePasswords Tests
+
+    [Theory]
+    [InlineData(1, 10, false)]
+    [InlineData(5, 15, false)]
+    [InlineData(10, 20, true)]
+    [InlineData(50, 8, false)]
+    [InlineData(100, 12, true)]
+    public void GeneratePasswords_ReturnsCorrectNumberOfPasswords(int count, int minLength, bool replaceSpecial)
+    {
+        // Act
+        var passwords = PasswordGenerator.GeneratePasswords(count, minLength, replaceSpecial);
+        
+        // Assert
+        Assert.Equal(count, passwords.Count);
+    }
+
+    [Theory]
+    [InlineData(5, 10, false)]
+    [InlineData(10, 15, true)]
+    public void GeneratePasswords_AllPasswordsMeetMinimumLength(int count, int minLength, bool replaceSpecial)
+    {
+        // Act
+        var passwords = PasswordGenerator.GeneratePasswords(count, minLength, replaceSpecial);
+        
+        // Assert
+        Assert.All(passwords, password => 
+            Assert.True(password.Length >= minLength, 
+                $"Password '{password}' length {password.Length} should be >= {minLength}"));
+    }
+
+    [Theory]
+    [InlineData(5, 10, true)]
+    [InlineData(10, 15, true)]
+    public void GeneratePasswords_AllPasswordsHaveSpecialCharactersReplaced_WhenReplaceSpecialIsTrue(int count, int minLength, bool replaceSpecial)
+    {
+        // Act
+        var passwords = PasswordGenerator.GeneratePasswords(count, minLength, replaceSpecial);
+        
+        // Assert
+        Assert.All(passwords, password =>
+        {
+            // Should not contain original characters that should be replaced
+            Assert.DoesNotContain('a', password);
+            Assert.DoesNotContain('A', password);
+            Assert.DoesNotContain('s', password);
+            Assert.DoesNotContain('S', password);
+            Assert.DoesNotContain('o', password);
+            Assert.DoesNotContain('O', password);
+            Assert.DoesNotContain('i', password);
+            Assert.DoesNotContain('I', password);
+            Assert.DoesNotContain('e', password);
+            Assert.DoesNotContain('E', password);
+            Assert.DoesNotContain('t', password);
+            Assert.DoesNotContain('T', password);
+        });
+    }
+
+    [Theory]
+    [InlineData(5, 10, false)]
+    [InlineData(10, 15, false)]
+    public void GeneratePasswords_AllPasswordsInCamelCaseFormat(int count, int minLength, bool replaceSpecial)
+    {
+        // Act
+        var passwords = PasswordGenerator.GeneratePasswords(count, minLength, replaceSpecial);
+        
+        // Assert
+        Assert.All(passwords, password =>
+        {
+            Assert.True(char.IsLower(password[0]), 
+                $"First character of password '{password}' should be lowercase");
+            Assert.True(password.Any(char.IsUpper), 
+                $"Password '{password}' should contain some uppercase letters");
+        });
+    }
+
+    [Fact]
+    public void GeneratePasswords_ProducesDifferentPasswords()
+    {
+        // Arrange
+        const int count = 10;
+        const int minLength = 15;
+        const bool replaceSpecial = false;
+        
+        // Act
+        var passwords = PasswordGenerator.GeneratePasswords(count, minLength, replaceSpecial);
+        var uniquePasswords = passwords.Distinct().ToList();
+        
+        // Assert
+        // It's extremely unlikely that all passwords would be identical with random generation
+        Assert.True(uniquePasswords.Count > 1, 
+            "Should generate multiple different passwords");
+    }
+
+    [Theory]
+    [InlineData(0, 10, false)]
+    [InlineData(-1, 10, false)]
+    [InlineData(101, 10, false)]
+    public void GeneratePasswords_ThrowsArgumentOutOfRangeException_WhenCountIsInvalid(int count, int minLength, bool replaceSpecial)
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentOutOfRangeException>(() => 
+            PasswordGenerator.GeneratePasswords(count, minLength, replaceSpecial));
+    }
+
+    [Theory]
+    [InlineData(5, 5, false)]
+    [InlineData(5, 1001, false)]
+    public void GeneratePasswords_ThrowsArgumentOutOfRangeException_WhenMinLengthIsInvalid(int count, int minLength, bool replaceSpecial)
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentOutOfRangeException>(() => 
+            PasswordGenerator.GeneratePasswords(count, minLength, replaceSpecial));
+    }
+
+    #endregion
 }
