@@ -4,11 +4,17 @@
     <ProjectReference Include="..\Logic\Logic.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.9" />
+    <PackageReference Include="OpenAI" Version="2.4.0" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UserSecretsId>8b805cdb-7f1b-4c87-b9a4-ad0594e25ada</UserSecretsId>
   </PropertyGroup>
 
 </Project>
